@@ -47,7 +47,9 @@ export default function Authenticated({
 
     const userRole = user.roles?.[0]?.name ?? 'Staff / Employee';
 
-    const isAdmin = ['Super Admin', 'HRD / Admin'].some(r => user.roles?.some((ur: any) => ur.name === r));
+    const isSuperAdmin = user.roles?.some((r: any) => r.name === 'Super Admin');
+    const isHRD = user.roles?.some((r: any) => r.name === 'HRD / Admin');
+    const isAdmin = isSuperAdmin || isHRD;
     const isManager = user.roles?.some((r: any) => r.name === 'General Manager');
     const isSupervisor = user.roles?.some((r: any) => ['Supervisor', 'Head of Department'].includes(r.name));
     const canViewPerformance = isAdmin || isManager;
@@ -96,7 +98,7 @@ export default function Authenticated({
                 { name: 'Reports & EPI', route: 'performance.index', pattern: 'performance.*' },
             ]
         },
-        isAdmin && {
+        isSuperAdmin && {
             title: 'Administration',
             items: [
                 { name: 'Roles & Permissions', route: 'roles.index', pattern: 'roles.*' },

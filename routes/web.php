@@ -129,6 +129,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:Super Admin|HRD / Admin|General Manager'])->group(function () {
         Route::resource('departments', DepartmentController::class)->except(['create', 'edit', 'show']);
         Route::resource('employees', EmployeeController::class)->except(['show']);
+    });
+
+    // System Administration Routes
+    Route::middleware(['role:Super Admin'])->group(function () {
         Route::get('/roles', function () {
             return Inertia::render('Administration/Roles', [
                 'roles' => Role::with('permissions')->get(),
