@@ -35,6 +35,9 @@ class TaskController extends Controller
 
         return Inertia::render('Tasks/Index', [
             'tasks' => $tasks,
+            'employees' => \App\Models\Employee::with(['user', 'department'])->get(),
+            'statuses' => TaskStatus::cases(),
+            'priorities' => TaskPriority::cases(),
         ]);
     }
 
@@ -61,6 +64,7 @@ class TaskController extends Controller
 
         return Inertia::render('Tasks/Kanban', [
             'tasks' => $tasks,
+            'employees' => \App\Models\Employee::with(['user', 'department'])->get(),
             'statuses' => TaskStatus::cases(),
             'priorities' => TaskPriority::cases(),
         ]);
@@ -71,7 +75,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'project_id' => 'required|exists:projects,id',
+            'project_id' => 'nullable|exists:projects,id',
             'priority' => 'required|string',
             'deadline' => 'nullable|date',
             'status' => 'required|string',

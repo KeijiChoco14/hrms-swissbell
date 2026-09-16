@@ -104,7 +104,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // === START OF DUMMY DATA (COMMENTED OUT FOR CLEAN SLATE) ===
-        /*
         // General Manager
         $gm = $createEmployee('Ahmad Rizky Pratama', 'gm@swissbelhotel.com', 'SBH-002', 'Front Office', 'Front Office Manager', 'General Manager');
 
@@ -697,7 +696,6 @@ class DatabaseSeeder extends Seeder
                 'category' => $category,
             ]);
         }
-        */
         // === END OF DUMMY DATA ===
     }
 }

@@ -1,12 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import CreateTaskModal from '@/Components/CreateTaskModal';
 
-export default function Index({ auth, tasks }: any) {
+export default function Index({ auth, tasks, employees, statuses, priorities }: any) {
+    const [showCreateModal, setShowCreateModal] = useState(false);
+
+    // Sort tasks by priority
+    const sortedTasks = [...(tasks || [])].sort((a: any, b: any) => {
+        const priorityWeight: Record<string, number> = {
+            'Urgent': 1,
+            'High': 2,
+            'Normal': 3,
+            'Low': 4
+        };
+        const weightA = priorityWeight[a.priority] || 99;
+        const weightB = priorityWeight[b.priority] || 99;
+        return weightA - weightB;
+    });
+
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">My Tasks</h2>}
+            header={
+                <div className="flex justify-between items-center">
+                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">My Tasks</h2>
+                    <button 
+                        onClick={() => setShowCreateModal(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm"
+                    >
+                        + Create Task
+                    </button>
+                </div>
+            }
         >
             <Head title="My Tasks" />
 
@@ -30,7 +56,7 @@ export default function Index({ auth, tasks }: any) {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {tasks.map((task: any) => (
+                                            {sortedTasks.map((task: any) => (
                                                 <tr key={task.id}>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         <Link href={route('projects.show', task.project_id)} className="text-indigo-600 hover:text-indigo-900">
@@ -79,6 +105,15 @@ export default function Index({ auth, tasks }: any) {
                     </div>
                 </div>
             </div>
+
+            <CreateTaskModal 
+                show={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                employees={employees}
+                statuses={statuses}
+                priorities={priorities}
+                defaultProjectId={null}
+            />
         </AuthenticatedLayout>
     );
 }

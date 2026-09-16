@@ -3,8 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import TaskDetailModal from './TaskDetailModal';
+import AssigneeSelect from '@/Components/AssigneeSelect';
 
-export default function Show({ auth, project, statuses, priorities }: PageProps<{ project: any, statuses: any[], priorities: any[] }>) {
+export default function Show({ auth, project, statuses, priorities, employees }: PageProps<{ project: any, statuses: any[], priorities: any[], employees: any[] }>) {
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState<any>(null);
     
@@ -23,6 +24,7 @@ export default function Show({ auth, project, statuses, priorities }: PageProps<
         status: 'To Do',
         project_id: project.id,
         deadline: '',
+        assignees: [] as number[],
     });
 
     const submitTask = (e: React.FormEvent) => {
@@ -41,9 +43,22 @@ export default function Show({ auth, project, statuses, priorities }: PageProps<
         });
     };
 
-    // Group tasks by status for the kanban board
+    // Group tasks by status for the kanban board and sort by priority
     const getTasksByStatus = (statusValue: string) => {
-        return project.tasks?.filter((t: any) => t.status === statusValue) || [];
+        const priorityWeight: Record<string, number> = {
+            'Urgent': 1,
+            'High': 2,
+            'Normal': 3,
+            'Low': 4
+        };
+
+        const filteredTasks = project.tasks?.filter((t: any) => t.status === statusValue) || [];
+        
+        return filteredTasks.sort((a: any, b: any) => {
+            const weightA = priorityWeight[a.priority] || 99;
+            const weightB = priorityWeight[b.priority] || 99;
+            return weightA - weightB;
+        });
     };
 
     const canEditTaskStatus = (task: any) => {
@@ -219,6 +234,15 @@ export default function Show({ auth, project, statuses, priorities }: PageProps<
                                                     ))}
                                                 </select>
                                             </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Assignees</label>
+                                            <AssigneeSelect 
+                                                employees={employees}
+                                                selectedIds={data.assignees}
+                                                onChange={(ids) => setData('assignees', ids)}
+                                            />
                                         </div>
                                     </div>
                                 </div>

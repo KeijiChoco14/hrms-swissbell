@@ -67,6 +67,7 @@ class ProjectController extends Controller
             'project' => $project,
             'statuses' => TaskStatus::cases(),
             'priorities' => TaskPriority::cases(),
+            'employees' => \App\Models\Employee::with(['user', 'department'])->get(),
         ]);
     }
 

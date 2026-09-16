@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import TaskDetailModal from '../Projects/TaskDetailModal';
+import CreateTaskModal from '@/Components/CreateTaskModal';
 
 const columnConfig: Record<string, { color: string; bg: string; border: string; icon: JSX.Element }> = {
     'To Do': {
@@ -29,8 +30,9 @@ const priorityConfig: Record<string, { bg: string; text: string }> = {
     'Low': { bg: 'bg-gray-100', text: 'text-gray-600' },
 };
 
-export default function Kanban({ auth, tasks, statuses, priorities }: any) {
+export default function Kanban({ auth, tasks, statuses, priorities, employees }: any) {
     const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     // Sync selectedTask when tasks props update (e.g. after adding comment/checklist)
     useEffect(() => {
@@ -58,8 +60,22 @@ export default function Kanban({ auth, tasks, statuses, priorities }: any) {
         });
     };
 
+    // Group tasks by status for the kanban board and sort by priority
     const getTasksByStatus = (statusValue: string) => {
-        return tasks?.filter((t: any) => t.status === statusValue) || [];
+        const priorityWeight: Record<string, number> = {
+            'Urgent': 1,
+            'High': 2,
+            'Normal': 3,
+            'Low': 4
+        };
+
+        const filteredTasks = tasks?.filter((t: any) => t.status === statusValue) || [];
+        
+        return filteredTasks.sort((a: any, b: any) => {
+            const weightA = priorityWeight[a.priority] || 99;
+            const weightB = priorityWeight[b.priority] || 99;
+            return weightA - weightB;
+        });
     };
 
     const kanbanColumns = ['To Do', 'In Progress', 'Review', 'Done'];
@@ -67,9 +83,17 @@ export default function Kanban({ auth, tasks, statuses, priorities }: any) {
     return (
         <AuthenticatedLayout
             header={
-                <div>
-                    <h2 className="font-bold text-xl text-gray-900">My Kanban Board</h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Drag tasks across columns to update status</p>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h2 className="font-bold text-xl text-gray-900">My Kanban Board</h2>
+                        <p className="text-sm text-gray-500 mt-0.5">Drag tasks across columns to update status</p>
+                    </div>
+                    <button 
+                        onClick={() => setShowCreateModal(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm"
+                    >
+                        + Create Task
+                    </button>
                 </div>
             }
         >
@@ -195,6 +219,15 @@ export default function Kanban({ auth, tasks, statuses, priorities }: any) {
                     onClose={() => setSelectedTask(null)} 
                 />
             )}
+
+            <CreateTaskModal 
+                show={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                employees={employees}
+                statuses={statuses}
+                priorities={priorities}
+                defaultProjectId={null}
+            />
         </AuthenticatedLayout>
     );
 }

@@ -1,0 +1,1 @@
+<?php require 'vendor/autoload.php'; $app = require_once 'bootstrap/app.php'; $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $users = \App\Models\User::whereNotNull('profile_photo_path')->get(['id', 'name', 'profile_photo_path']); dump($users->toArray());
