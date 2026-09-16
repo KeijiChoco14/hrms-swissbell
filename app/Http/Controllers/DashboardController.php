@@ -45,24 +45,6 @@ class DashboardController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->first();
 
-            $todaySchedule = WorkSchedule::with('shift')
-                ->where('employee_id', $employeeId)
-                ->where('date', $today->format('Y-m-d'))
-                ->first();
-
-            // Attendance summary for this month
-            $monthStart = $today->copy()->startOfMonth();
-            $attendanceThisMonth = Attendance::where('employee_id', $employeeId)
-                ->whereBetween('date', [$monthStart, $today])
-                ->get();
-
-            $attendanceSummary = [
-                'present' => $attendanceThisMonth->where('status', 'Present')->count(),
-                'late' => $attendanceThisMonth->where('status', 'Late')->count(),
-                'absent' => $attendanceThisMonth->where('status', 'Absent')->count(),
-                'total_days' => $today->diffInWeekdays($monthStart) + 1,
-            ];
-
             // Leave balance
             $leaveStats = [
                 'pending' => LeaveRequest::where('employee_id', $employeeId)->where('status', 'Pending')->count(),
@@ -77,7 +59,6 @@ class DashboardController extends Controller
                 ->get();
 
             $data['employeeData'] = [
-                'todaySchedule' => $todaySchedule,
                 'tasksSummary' => [
                     'todo' => Task::whereHas('assignees', fn ($q) => $q->where('employee_id', $employeeId))->where('status', 'To Do')->count(),
                     'in_progress' => Task::whereHas('assignees', fn ($q) => $q->where('employee_id', $employeeId))->where('status', 'In Progress')->count(),
@@ -92,7 +73,6 @@ class DashboardController extends Controller
                     ->limit(5)
                     ->get(),
                 'latestPerformanceScore' => $latestScore,
-                'attendanceSummary' => $attendanceSummary,
                 'leaveStats' => $leaveStats,
                 'recentActivities' => $recentActivities,
             ];

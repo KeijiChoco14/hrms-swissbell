@@ -40,13 +40,8 @@ export default function EmployeeDashboard({ data }: { data: any }) {
     const summary = data?.tasksSummary || { todo: 0, in_progress: 0, review: 0, done: 0, overdue: 0 };
     const upcomingTasks = data?.upcomingTasks || [];
     const announcements = data?.announcements || [];
-    const attendance = data?.attendanceSummary || { present: 0, late: 0, absent: 0, total_days: 0 };
     const leaveStats = data?.leaveStats || { pending: 0, approved: 0 };
     const recentActivities = data?.recentActivities || [];
-
-    const attendanceRate = attendance.total_days > 0
-        ? Math.round(((attendance.present + attendance.late) / attendance.total_days) * 100)
-        : 0;
 
     return (
         <div className="space-y-6">
@@ -71,70 +66,39 @@ export default function EmployeeDashboard({ data }: { data: any }) {
                 </div>
             )}
 
-            {/* Today's Shift */}
-            <div>
-                {data?.todaySchedule ? (
-                    <div className="flex items-center justify-between bg-white border border-gray-200 p-4 rounded-xl shadow-sm border-l-4" style={{ borderLeftColor: data.todaySchedule.shift.color }}>
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-lg bg-gray-50 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {/* Quick Actions & Leave Status Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Quick Actions */}
+                <div className="lg:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100/80 p-6">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-5">
+                        <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        Quick Actions
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <Link href={route('leave.index')} className="flex flex-col items-center justify-center p-4 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors group">
+                            <div className="p-3 bg-white rounded-full shadow-sm text-indigo-600 group-hover:scale-110 transition-transform">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             </div>
-                            <div>
-                                <h3 className="font-bold text-gray-900 leading-tight">Today's Shift: {data.todaySchedule.shift.name}</h3>
-                                <p className="text-sm text-gray-500 font-medium">
-                                    {data.todaySchedule.shift.start_time.substring(0, 5)} - {data.todaySchedule.shift.end_time.substring(0, 5)}
-                                </p>
+                            <span className="mt-3 text-sm font-medium text-indigo-900">Pengajuan Cuti</span>
+                        </Link>
+                        <Link href={route('overtime.index')} className="flex flex-col items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors group">
+                            <div className="p-3 bg-white rounded-full shadow-sm text-blue-600 group-hover:scale-110 transition-transform">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             </div>
-                        </div>
-                        <div className="text-right">
-                            <span className="inline-flex items-center px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700">Scheduled</span>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-4 bg-white border border-gray-200 p-4 rounded-xl shadow-sm border-l-4 border-l-gray-300">
-                        <div className="p-3 rounded-lg bg-gray-50">
-                            <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-900 leading-tight">No Shift Today</h3>
-                            <p className="text-sm text-gray-500 font-medium">Enjoy your day off!</p>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Attendance + Leave Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Attendance Summary */}
-                <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100/80 p-6">
-                    <div className="flex items-center justify-between mb-5">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                            <svg className="w-5 h-5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            Attendance This Month
-                        </h3>
-                        <span className={`text-lg font-bold ${attendanceRate >= 90 ? 'text-emerald-600' : attendanceRate >= 75 ? 'text-amber-600' : 'text-red-600'}`}>
-                            {attendanceRate}%
-                        </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden mb-4">
-                        <div
-                            className={`h-full rounded-full transition-all duration-700 ${attendanceRate >= 90 ? 'bg-emerald-500' : attendanceRate >= 75 ? 'bg-amber-500' : 'bg-red-500'}`}
-                            style={{ width: `${attendanceRate}%` }}
-                        />
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="text-center p-3 rounded-lg bg-emerald-50">
-                            <div className="text-xl font-bold text-emerald-700">{attendance.present}</div>
-                            <div className="text-[10px] font-semibold text-emerald-600 uppercase">Hadir</div>
-                        </div>
-                        <div className="text-center p-3 rounded-lg bg-amber-50">
-                            <div className="text-xl font-bold text-amber-700">{attendance.late}</div>
-                            <div className="text-[10px] font-semibold text-amber-600 uppercase">Telat</div>
-                        </div>
-                        <div className="text-center p-3 rounded-lg bg-red-50">
-                            <div className="text-xl font-bold text-red-700">{attendance.absent}</div>
-                            <div className="text-[10px] font-semibold text-red-600 uppercase">Absen</div>
-                        </div>
+                            <span className="mt-3 text-sm font-medium text-blue-900">Lemburan</span>
+                        </Link>
+                        <Link href={route('payroll.my')} className="flex flex-col items-center justify-center p-4 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors group">
+                            <div className="p-3 bg-white rounded-full shadow-sm text-emerald-600 group-hover:scale-110 transition-transform">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                            </div>
+                            <span className="mt-3 text-sm font-medium text-emerald-900">Slip Gaji</span>
+                        </Link>
+                        <Link href={route('tasks.index')} className="flex flex-col items-center justify-center p-4 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors group">
+                            <div className="p-3 bg-white rounded-full shadow-sm text-amber-600 group-hover:scale-110 transition-transform">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                            </div>
+                            <span className="mt-3 text-sm font-medium text-amber-900">Daftar Tugas</span>
+                        </Link>
                     </div>
                 </div>
 
