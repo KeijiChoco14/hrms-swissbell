@@ -2,7 +2,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
 
 const icons: Record<string, JSX.Element> = {
@@ -222,10 +222,28 @@ export default function Authenticated({
                                     <div className="max-h-64 overflow-y-auto">
                                         {(usePage().props.auth as any).notifications?.length > 0 ? (
                                             (usePage().props.auth as any).notifications.map((notif: any) => {
+                                                const handleDeleteNotification = (e: React.MouseEvent) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    router.delete(route('notifications.destroy', notif.id), {
+                                                        preserveScroll: true,
+                                                        preserveState: true,
+                                                    });
+                                                };
+
                                                 const content = (
-                                                    <div className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer">
-                                                        <p className="text-sm text-gray-800">{notif.data.message}</p>
-                                                        <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.created_at).toLocaleString()}</p>
+                                                    <div className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer group flex justify-between items-start gap-2">
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm text-gray-800">{notif.data.message}</p>
+                                                            <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.created_at).toLocaleString()}</p>
+                                                        </div>
+                                                        <button 
+                                                            onClick={handleDeleteNotification}
+                                                            className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                                                            title="Hapus Notifikasi"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                        </button>
                                                     </div>
                                                 );
                                                 

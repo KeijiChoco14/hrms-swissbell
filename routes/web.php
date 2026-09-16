@@ -58,6 +58,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/tasks/{task}/acknowledge', [TaskController::class, 'acknowledge'])->name('tasks.acknowledge');
 
+    // Notifications Route
+    Route::delete('/notifications/{id}', function ($id) {
+        Illuminate\Support\Facades\Auth::user()->notifications()->where('id', $id)->delete();
+        return back();
+    })->name('notifications.destroy');
+
     // Performance Routes
     Route::middleware(['role:Super Admin|HRD / Admin|General Manager'])->group(function () {
         Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');

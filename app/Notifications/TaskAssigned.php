@@ -29,7 +29,7 @@ class TaskAssigned extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail', \App\Channels\FonnteChannel::class];
+        return ['database', 'mail'];
     }
 
     /**
@@ -66,29 +66,5 @@ class TaskAssigned extends Notification
             'message' => 'You have been assigned to a new task: ' . $this->task->title,
             'action_url' => $this->task->project_id ? route('projects.show', $this->task->project_id) : route('tasks.index'),
         ];
-    }
-
-    /**
-     * Get the Fonnte representation of the notification.
-     */
-    public function toFonnte(object $notifiable): string
-    {
-        $url = $this->task->project_id 
-            ? route('projects.show', $this->task->project_id) 
-            : route('tasks.index');
-
-        $greeting = 'Halo *' . ($notifiable->name ?? 'Karyawan') . "*,\n\n";
-        $body = "Anda telah ditugaskan pada sebuah task baru.\n\n";
-        $body .= "📌 *Judul Task:* " . $this->task->title . "\n";
-        $body .= "📂 *Project:* " . ($this->task->project->name ?? 'Task Mandiri (Tanpa Project)') . "\n";
-        
-        $priority = $this->task->priority->value ?? $this->task->priority;
-        $body .= "⚡ *Prioritas:* " . $priority . "\n\n";
-        
-        $body .= "Klik link berikut untuk melihat detail:\n";
-        $body .= $url . "\n\n";
-        $body .= "Terima kasih!";
-
-        return $greeting . $body;
     }
 }

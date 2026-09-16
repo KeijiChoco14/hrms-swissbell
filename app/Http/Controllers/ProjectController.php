@@ -16,7 +16,7 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::with(['owner', 'department'])->latest()->paginate(10);
+        $projects = Project::with(['owner.user', 'department'])->latest()->paginate(10);
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
@@ -26,7 +26,7 @@ class ProjectController extends Controller
     public function create()
     {
         return Inertia::render('Projects/Create', [
-            'employees' => Employee::all(),
+            'employees' => Employee::with('user')->get(),
             'departments' => Department::all(),
         ]);
     }
@@ -75,7 +75,7 @@ class ProjectController extends Controller
     {
         return Inertia::render('Projects/Edit', [
             'project' => $project,
-            'employees' => Employee::all(),
+            'employees' => Employee::with('user')->get(),
             'departments' => Department::all(),
         ]);
     }
