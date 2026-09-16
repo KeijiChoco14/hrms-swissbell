@@ -29,7 +29,27 @@ class TaskAssigned extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'mail'];
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
+    {
+        $url = $this->task->project_id 
+            ? route('projects.show', $this->task->project_id) 
+            : route('tasks.index');
+
+        return (new MailMessage)
+                    ->subject('Tugas Baru: ' . $this->task->title)
+                    ->greeting('Halo ' . ($notifiable->name ?? 'Karyawan') . ',')
+                    ->line('Anda telah ditugaskan pada sebuah task baru.')
+                    ->line('**Judul Task:** ' . $this->task->title)
+                    ->line('**Project:** ' . ($this->task->project->name ?? 'Task Mandiri (Tanpa Project)'))
+                    ->line('**Prioritas:** ' . ($this->task->priority->value ?? $this->task->priority))
+                    ->action('Lihat Detail Task', $url)
+                    ->line('Terima kasih telah menggunakan sistem manajemen kami!');
     }
 
     /**
@@ -44,6 +64,7 @@ class TaskAssigned extends Notification
             'title' => $this->task->title,
             'project_name' => $this->task->project->name ?? 'No Project',
             'message' => 'You have been assigned to a new task: ' . $this->task->title,
+            'action_url' => $this->task->project_id ? route('projects.show', $this->task->project_id) : route('tasks.index'),
         ];
     }
 }

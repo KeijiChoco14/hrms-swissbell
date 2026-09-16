@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Employee extends Model
 {
@@ -23,6 +24,23 @@ class Employee extends Model
         'account_status',
         'profile_photo',
     ];
+
+    protected function phoneNumber(): Attribute
+    {
+        return Attribute::make(
+            set: function ($value) {
+                if (!$value) return null;
+                $cleaned = preg_replace('/[^0-9+]/', '', $value);
+                if (str_starts_with($cleaned, '0')) {
+                    return '+62' . substr($cleaned, 1);
+                }
+                if (str_starts_with($cleaned, '62')) {
+                    return '+' . $cleaned;
+                }
+                return $cleaned;
+            }
+        );
+    }
 
     public function user()
     {

@@ -59,9 +59,13 @@ export default function Index({ auth, tasks, employees, statuses, priorities }: 
                                             {sortedTasks.map((task: any) => (
                                                 <tr key={task.id}>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        <Link href={route('projects.show', task.project_id)} className="text-indigo-600 hover:text-indigo-900">
-                                                            {task.project?.name || 'Unknown Project'}
-                                                        </Link>
+                                                        {task.project_id ? (
+                                                            <Link href={route('projects.show', task.project_id)} className="text-indigo-600 hover:text-indigo-900">
+                                                                {task.project?.name || 'Unknown Project'}
+                                                            </Link>
+                                                        ) : (
+                                                            <span className="text-gray-400 italic">Task Mandiri</span>
+                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900">{task.title}</div>
@@ -91,7 +95,11 @@ export default function Index({ auth, tasks, employees, statuses, priorities }: 
                                                         {task.deadline ? new Date(task.deadline).toLocaleDateString() : '-'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <Link href={route('projects.show', task.project_id)} className="text-indigo-600 hover:text-indigo-900">View Board</Link>
+                                                        {task.project_id ? (
+                                                            <Link href={route('projects.show', task.project_id)} className="text-indigo-600 hover:text-indigo-900">View Board</Link>
+                                                        ) : (
+                                                            <Link href={route('tasks.kanban')} className="text-indigo-600 hover:text-indigo-900">View Kanban</Link>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))}

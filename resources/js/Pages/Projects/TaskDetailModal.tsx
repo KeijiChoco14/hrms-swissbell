@@ -89,8 +89,8 @@ export default function TaskDetailModal({ task, onClose, currentUser }: { task: 
                     </div>
 
                     {/* Navigation Tabs */}
-                    <div className="border-b border-gray-200">
-                        <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                    <div className="border-b border-gray-200 overflow-x-auto">
+                        <nav className="-mb-px flex space-x-6 px-6 min-w-max" aria-label="Tabs">
                             {['details', 'checklists', 'attachments', 'comments', 'activity'].map(tab => (
                                 <button
                                     key={tab}

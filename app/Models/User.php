@@ -55,6 +55,30 @@ class User extends Authenticatable
         );
     }
 
+    protected function phoneNumber(): Attribute
+    {
+        return Attribute::make(
+            set: function ($value) {
+                if (!$value) return null;
+                // Clean the phone number from non-numeric characters (except +)
+                $cleaned = preg_replace('/[^0-9+]/', '', $value);
+                
+                // Replace leading 0 with +62
+                if (str_starts_with($cleaned, '0')) {
+                    return '+62' . substr($cleaned, 1);
+                }
+                
+                // If it starts with 62 (without +), prepend +
+                if (str_starts_with($cleaned, '62')) {
+                    return '+' . $cleaned;
+                }
+                
+                // If it already starts with +62 or something else, leave as is
+                return $cleaned;
+            }
+        );
+    }
+
     /**
      * Get the default profile photo URL if no profile photo has been uploaded.
      */

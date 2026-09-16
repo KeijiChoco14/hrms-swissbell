@@ -221,12 +221,22 @@ export default function Authenticated({
                                     </div>
                                     <div className="max-h-64 overflow-y-auto">
                                         {(usePage().props.auth as any).notifications?.length > 0 ? (
-                                            (usePage().props.auth as any).notifications.map((notif: any) => (
-                                                <div key={notif.id} className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                                                    <p className="text-sm text-gray-800">{notif.data.message}</p>
-                                                    <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.created_at).toLocaleString()}</p>
-                                                </div>
-                                            ))
+                                            (usePage().props.auth as any).notifications.map((notif: any) => {
+                                                const content = (
+                                                    <div className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer">
+                                                        <p className="text-sm text-gray-800">{notif.data.message}</p>
+                                                        <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.created_at).toLocaleString()}</p>
+                                                    </div>
+                                                );
+                                                
+                                                return notif.data.action_url ? (
+                                                    <Link key={notif.id} href={notif.data.action_url} className="block">
+                                                        {content}
+                                                    </Link>
+                                                ) : (
+                                                    <div key={notif.id}>{content}</div>
+                                                );
+                                            })
                                         ) : (
                                             <div className="px-4 py-6 text-center text-sm text-gray-500">
                                                 No new notifications
