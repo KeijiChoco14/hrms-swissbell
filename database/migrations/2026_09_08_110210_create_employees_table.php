@@ -22,7 +22,7 @@ return new class extends Migration
             $table->date('join_date')->nullable();
             $table->string('employment_status')->default('Active');
             $table->string('account_status')->default('Active');
-            $table->string('profile_photo')->nullable();
+
             $table->timestamps();
         });
     }

@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('profile_photo_path', 2048)->nullable();
         });
+
+        Schema::table('employees', function (Blueprint $table) {
+            $table->string('profile_photo')->nullable();
+        });
     }
 
     /**
@@ -23,6 +27,10 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('profile_photo_path');
+        });
+
+        Schema::table('employees', function (Blueprint $table) {
+            $table->dropColumn('profile_photo');
         });
     }
 };

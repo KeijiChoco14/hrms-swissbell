@@ -14,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'email', 'password', 'profile_photo_path', 'phone_number'])]
+#[Fillable(['name', 'email', 'password', 'phone_number'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -24,6 +24,7 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
 
     /**
      * Get the attributes that should be cast.
@@ -43,16 +44,15 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class);
     }
 
-    /**
-     * Get the URL to the user's profile photo.
-     */
     protected function profilePhotoUrl(): Attribute
     {
-        return Attribute::get(function (): string {
-            return $this->profile_photo_path
+        return Attribute::make(
+            get: function () {
+                return $this->profile_photo_path
                     ? Storage::url($this->profile_photo_path)
                     : $this->defaultProfilePhotoUrl();
-        });
+            },
+        );
     }
 
     /**
