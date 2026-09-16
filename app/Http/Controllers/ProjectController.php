@@ -14,9 +14,37 @@ use Inertia\Inertia;
 
 class ProjectController extends Controller
 {
+    private function checkAccess(Project $project)
+    {
+        $user = Auth::user();
+        if ($user->hasAnyRole(['Super Admin', 'HRD / Admin', 'General Manager', 'Supervisor', 'Head of Department'])) {
+            return;
+        }
+
+        $employeeId = $user->employee->id ?? null;
+        $isOwner = $project->owner_id == $employeeId;
+        $isMember = $project->members()->where('employee_id', $employeeId)->exists();
+
+        if (!$isOwner && !$isMember) {
+            abort(403, 'Anda tidak memiliki akses ke project ini.');
+        }
+    }
     public function index()
     {
-        $projects = Project::with(['owner.user', 'department'])->latest()->paginate(10);
+        $user = Auth::user();
+        $query = Project::with(['owner.user', 'department'])->latest();
+
+        if (!$user->hasAnyRole(['Super Admin', 'HRD / Admin', 'General Manager', 'Supervisor', 'Head of Department'])) {
+            $employeeId = $user->employee->id ?? null;
+            $query->where(function ($q) use ($employeeId) {
+                $q->where('owner_id', $employeeId)
+                  ->orWhereHas('members', function ($q2) use ($employeeId) {
+                      $q2->where('employee_id', $employeeId);
+                  });
+            });
+        }
+
+        $projects = $query->paginate(10);
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
@@ -52,6 +80,8 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
+        $this->checkAccess($project);
+
         $project->load([
             'owner',
             'department',
@@ -73,6 +103,8 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
+        $this->checkAccess($project);
+
         return Inertia::render('Projects/Edit', [
             'project' => $project,
             'employees' => Employee::with('user')->get(),
@@ -82,6 +114,8 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
+        $this->checkAccess($project);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -99,6 +133,8 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
+        $this->checkAccess($project);
+
         $project->delete();
 
         return redirect()->route('projects.index')->with('success', 'Project deleted successfully.');
