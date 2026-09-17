@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import AiExecutiveAssistantCard from '@/Components/AiExecutiveAssistantCard';
+
 
 export default function HRDashboard({ data }: { data: any }) {
     const stats = {
@@ -33,8 +33,7 @@ export default function HRDashboard({ data }: { data: any }) {
 
     return (
         <div className="space-y-6">
-            {/* AI Executive Assistant Module */}
-            <AiExecutiveAssistantCard initialData={data?.aiExecutiveSummary} />
+
 
             {/* Announcement Banner */}
             {announcements.length > 0 && (
