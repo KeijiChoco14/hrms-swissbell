@@ -181,17 +181,161 @@ class AiAssistantService
         $queryLower = mb_strtolower(trim($query));
         $summary = $this->generateExecutiveSummary();
 
+        // Check if Gemini API is configured
+        $apiKey = config('services.gemini.key');
+        
+        if (!empty($apiKey)) {
+            try {
+                $prompt = "Anda adalah AI Executive Assistant untuk sistem HRMS hotel Swiss-Belinn Pekanbaru.\n"
+                        . "Tugas Anda: Jawab pertanyaan pengguna secara akurat, singkat, dan profesional dalam bahasa Indonesia berdasarkan Data JSON berikut.\n\n"
+                        . "DATA OPERASIONAL (JSON):\n" . json_encode($summary) . "\n\n"
+                        . "PERTANYAAN PENGGUNA:\n" . $query;
+
+                $response = \Illuminate\Support\Facades\Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}", [
+                    'contents' => [
+                        [
+                            'parts' => [['text' => $prompt]]
+                        ]
+                    ]
+                ]);
+
+                if ($response->successful()) {
+                    $result = $response->json();
+                    $generatedText = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    
+                    if ($generatedText) {
+                        return [
+                            'query' => $query,
+                            'category' => 'gemini_generative',
+                            'response' => trim($generatedText),
+                            'data' => null, // Omit detailed data array when generative handles it
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                // Silently fallback to local keyword matching
+            }
+        }
+
+        // --- Local Keyword Matching Fallback ---
+
+        // Topic: Employees Count
+        if ($this->matchIntent($queryLower, [['karyawan', 'pegawai', 'staf', 'staff', 'pekerja', 'orang'], ['jumlah', 'total', 'berapa', 'banyak', 'hitung']])) {
+            $totalEmployees = \App\Models\User::count();
+            return [
+                'query' => $query,
+                'category' => 'general_info',
+                'response' => "**Informasi Karyawan:**\n\nSaat ini terdapat **{$totalEmployees} karyawan** yang terdaftar dalam sistem HRMS.",
+                'data' => ['total_employees' => $totalEmployees],
+            ];
+        }
+
+        // Topic: Projects
+        if ($this->matchIntent($queryLower, [['project', 'proyek'], ['jumlah', 'total', 'berapa', 'banyak', 'aktif']])) {
+            $totalProjects = \App\Models\Project::count();
+            $activeProjects = \App\Models\Project::where('status', '!=', 'completed')->count();
+            return [
+                'query' => $query,
+                'category' => 'general_info',
+                'response' => "**Informasi Project:**\n\nSaat ini terdapat total **{$totalProjects} project**, dengan **{$activeProjects} project** yang masih berstatus aktif (sedang berjalan).",
+                'data' => ['total_projects' => $totalProjects, 'active_projects' => $activeProjects],
+            ];
+        }
+
+        // Topic: Leave/Absensi
+        if ($this->matchIntent($queryLower, [['cuti', 'libur', 'absen', 'tidak masuk'], ['siapa', 'berapa', 'hari ini', 'sedang', 'info', 'data']])) {
+            $leavesToday = \App\Models\LeaveRequest::where('status', 'approved')
+                ->whereDate('start_date', '<=', now())
+                ->whereDate('end_date', '>=', now())
+                ->with('user')
+                ->get();
+            
+            if ($leavesToday->isEmpty()) {
+                $response = "**Informasi Cuti:**\n\nTidak ada karyawan yang sedang mengambil cuti hari ini.";
+            } else {
+                $names = $leavesToday->pluck('user.name')->implode(', ');
+                $response = "**Informasi Cuti:**\n\nHari ini ada **{$leavesToday->count()} karyawan** yang sedang cuti, yaitu: {$names}.";
+            }
+            return [
+                'query' => $query,
+                'category' => 'general_info',
+                'response' => $response,
+                'data' => ['leaves_today_count' => $leavesToday->count()],
+            ];
+        }
+
+        // Topic: Departments Count
+        if ($this->matchIntent($queryLower, [['departemen', 'divisi', 'bagian'], ['jumlah', 'total', 'berapa', 'banyak']])) {
+            $totalDepts = \App\Models\Department::count();
+            return [
+                'query' => $query,
+                'category' => 'general_info',
+                'response' => "**Informasi Departemen:**\n\nSaat ini terdapat **{$totalDepts} departemen** yang terstruktur dalam sistem HRMS hotel.",
+                'data' => ['total_departments' => $totalDepts],
+            ];
+        }
+
+        // Topic: Overtime/Lembur
+        if ($this->matchIntent($queryLower, [['lembur', 'overtime']])) {
+            $overtimePending = \App\Models\OvertimeRequest::where('status', 'pending')->count();
+            $overtimeApprovedToday = \App\Models\OvertimeRequest::where('status', 'approved')
+                ->whereDate('date', now())
+                ->with('user')
+                ->get();
+            
+            $response = "**Informasi Lembur:**\n\n";
+            $response .= "Terdapat **{$overtimePending} pengajuan lembur** yang masih menunggu persetujuan (pending).\n";
+            
+            if ($overtimeApprovedToday->isEmpty()) {
+                $response .= "Untuk hari ini, belum ada karyawan yang dijadwalkan lembur (approved).";
+            } else {
+                $names = $overtimeApprovedToday->pluck('user.name')->implode(', ');
+                $response .= "Hari ini ada **{$overtimeApprovedToday->count()} karyawan** yang disetujui untuk lembur, yaitu: {$names}.";
+            }
+
+            return [
+                'query' => $query,
+                'category' => 'general_info',
+                'response' => $response,
+                'data' => [
+                    'pending_overtime' => $overtimePending,
+                    'approved_today' => $overtimeApprovedToday->count()
+                ],
+            ];
+        }
+
+        // Topic: Announcements
+        if ($this->matchIntent($queryLower, [['pengumuman', 'berita', 'informasi', 'update', 'kabar'], ['terbaru', 'hari ini', 'terkini', 'apa']])) {
+            $latestAnnouncement = \App\Models\Announcement::latest()->first();
+            
+            if ($latestAnnouncement) {
+                $date = $latestAnnouncement->created_at->translatedFormat('d F Y');
+                $response = "**Pengumuman Terbaru ({$date}):**\n\n" .
+                    "**{$latestAnnouncement->title}**\n" .
+                    $latestAnnouncement->content;
+            } else {
+                $response = "**Informasi Pengumuman:**\n\nBelum ada pengumuman terbaru yang dipublikasikan di sistem.";
+            }
+
+            return [
+                'query' => $query,
+                'category' => 'general_info',
+                'response' => $response,
+                'data' => ['latest_announcement' => $latestAnnouncement],
+            ];
+        }
+
         // Topic 1: Employee of the Month / Top Performers
-        if (str_contains($queryLower, 'terbaik') || str_contains($queryLower, 'performa') || str_contains($queryLower, 'employee of the month') || str_contains($queryLower, 'karyawan')) {
+        if ($this->matchIntent($queryLower, [['terbaik', 'bagus', 'rajin', 'performa', 'kinerja', 'prestasi', 'employee of the month']])) {
             $top = $summary['topPerformer'];
             if ($top) {
-                $response = "⭐ **Rekomendasi Karyawan Terbaik (Employee of the Month):**\n\n" .
+                $response = "**Rekomendasi Karyawan Terbaik (Employee of the Month):**\n\n" .
                     "Karyawan terbaik yang direkomendasikan sistem adalah **{$top['name']}** ({$top['position']} - {$top['department']}) dengan Skor Performa **{$top['compositeScore']}/100**.\n\n" .
-                    "📌 **Highlights Pencapaian:**\n" .
+                    "**Highlights Pencapaian:**\n" .
                     "• Menyelesaikan **{$top['completedTasks']} tugas** dengan sukses.\n" .
                     "• Skor Penilaian Supervisor: **{$top['supervisorRating']}/100**.\n" .
                     "• Kedisiplinan Kehadiran: **{$top['attendanceRate']}%**.\n\n" .
-                    "💡 *Saran Manajemen*: Berikan apresiasi atau sertifikat 'Employee of the Month' pada briefing bulanan berikutnya.";
+                    "*Saran Manajemen*: Berikan apresiasi atau sertifikat 'Employee of the Month' pada briefing bulanan berikutnya.";
             } else {
                 $response = "Belum ada data indikator kinerja yang cukup untuk menentukan rekomendasi karyawan terbaik bulan ini.";
             }
@@ -205,16 +349,16 @@ class AiAssistantService
         }
 
         // Topic 2: Department Analysis
-        if (str_contains($queryLower, 'departemen') || str_contains($queryLower, 'divisi') || str_contains($queryLower, 'department')) {
+        if ($this->matchIntent($queryLower, [['departemen', 'divisi', 'bagian'], ['analisis', 'kinerja', 'performa', 'status', 'kesehatan']])) {
             $depts = $summary['departmentBreakdown'];
             $deptList = '';
             foreach ($depts as $d) {
                 $deptList .= "• **{$d['name']}**: {$d['completed_tasks']} Selesai, {$d['active_tasks']} Aktif (Tingkat Penyelesaian: {$d['completion_rate']}%)\n";
             }
 
-            $response = "📊 **Analisis Kesehatan Operasional per Departemen:**\n\n" .
+            $response = "**Analisis Kesehatan Operasional per Departemen:**\n\n" .
                 $deptList . "\n" .
-                "💡 *Rekomendasi*: Fokuskan alokasi sumber daya ke departemen dengan beban *active tasks* yang masih tinggi.";
+                "*Rekomendasi*: Fokuskan alokasi sumber daya ke departemen dengan beban *active tasks* yang masih tinggi.";
 
             return [
                 'query' => $query,
@@ -225,17 +369,17 @@ class AiAssistantService
         }
 
         // Topic 3: Risk Alerts / Overdue Tasks
-        if (str_contains($queryLower, 'resiko') || str_contains($queryLower, 'risiko') || str_contains($queryLower, 'terlambat') || str_contains($queryLower, 'overdue') || str_contains($queryLower, 'masalah')) {
+        if ($this->matchIntent($queryLower, [['resiko', 'risiko', 'terlambat', 'overdue', 'masalah', 'peringatan', 'bahaya', 'alert']])) {
             $alerts = $summary['alerts'];
             $alertText = '';
             foreach ($alerts as $a) {
                 $alertText .= "• **{$a['title']}**: {$a['message']}\n";
             }
 
-            $response = "🚨 **Peringatan Risiko Operasional & Task Delay:**\n\n" .
+            $response = "**Peringatan Risiko Operasional & Task Delay:**\n\n" .
                 "Saat ini terdapat **{$summary['overdueTasksCount']} tugas overdue** dan **{$summary['pendingApprovals']} pengajuan menunggu approval**.\n\n" .
-                "📋 **Rincian Alert Sistem:**\n" . $alertText . "\n" .
-                "💡 *Tindakan Disarankan*: Instruksikan Head of Department terkait untuk mempercepat *review* dan verifikasi tugas.";
+                "**Rincian Alert Sistem:**\n" . ($alertText ?: 'Tidak ada alert kritis saat ini.') . "\n" .
+                "*Tindakan Disarankan*: Instruksikan Head of Department terkait untuk mempercepat *review* dan verifikasi tugas.";
 
             return [
                 'query' => $query,
@@ -245,15 +389,25 @@ class AiAssistantService
             ];
         }
 
-        // Topic 4: General Executive Briefing (Default)
-        $response = "🤖 **Rangkuman Eksekutif AI (Swiss-Belinn HRMS):**\n\n" .
+        // Catch-all Fallback for Unrecognized Questions
+        if ($this->matchIntent($queryLower, [['siapa', 'apa', 'bagaimana', 'kapan', 'dimana', 'kenapa', 'mengapa', 'tolong']])) {
+            return [
+                'query' => $query,
+                'category' => 'unrecognized',
+                'response' => "Maaf, karena saya berjalan secara lokal tanpa API eksternal (LLM), pemahaman saya terbatas pada topik spesifik. Anda dapat menanyakan seputar:\n• Jumlah karyawan/staf/pekerja\n• Informasi cuti/absen hari ini\n• Data lembur hari ini\n• Rekomendasi karyawan terbaik/performa\n• Analisis kinerja departemen\n• Peringatan risiko operasional\n• Pengumuman/berita terbaru",
+                'data' => null,
+            ];
+        }
+
+        // Topic 4: General Executive Briefing (Default / Empty / Summary)
+        $response = "**Rangkuman Eksekutif AI (Swiss-Belinn HRMS):**\n\n" .
             $summary['briefingNarrative'] . "\n\n" .
-            "📌 **Status Ringkas:**\n" .
+            "**Status Ringkas:**\n" .
             "• Indeks Kesehatan Operasional: **{$summary['healthScore']}/100 ({$summary['healthStatus']})**\n" .
             "• Tingkat Kehadiran Bulanan: **{$summary['attendanceRate']}%**\n" .
             "• Tugas Selesai Bulan Ini: **{$summary['completedTasksMonth']} tugas**\n" .
             "• Tugas Melebihi Deadline: **{$summary['overdueTasksCount']} tugas**\n\n" .
-            "Silakan pilih atau tanyakan detail lebih lanjut mengenai *Performa Karyawan*, *Analisis Departemen*, atau *Alert Risiko*.";
+            "Silakan tanyakan detail spesifik seperti *Jumlah Karyawan*, *Performa Karyawan*, *Analisis Departemen*, atau *Alert Risiko*.";
 
         return [
             'query' => $query,
@@ -261,6 +415,28 @@ class AiAssistantService
             'response' => $response,
             'data' => $summary,
         ];
+    }
+
+    /**
+     * Engine for matching complex intents using grouped synonymous keywords.
+     * It requires at least one keyword from each provided group to match the query.
+     */
+    private function matchIntent(string $query, array $keywordGroups): bool
+    {
+        foreach ($keywordGroups as $group) {
+            $groupMatched = false;
+            foreach ($group as $word) {
+                if (str_contains($query, $word)) {
+                    $groupMatched = true;
+                    break;
+                }
+            }
+            // If any group completely fails to match, the intent is not a match.
+            if (!$groupMatched) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
