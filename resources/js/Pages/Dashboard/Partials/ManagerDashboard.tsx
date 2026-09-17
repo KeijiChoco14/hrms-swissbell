@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import AiExecutiveAssistantCard from '@/Components/AiExecutiveAssistantCard';
 
 export default function ManagerDashboard({ data }: { data: any }) {
     const stats = {
@@ -45,6 +46,9 @@ export default function ManagerDashboard({ data }: { data: any }) {
 
     return (
         <div className="space-y-6">
+            {/* AI Executive Assistant Module */}
+            <AiExecutiveAssistantCard initialData={data?.aiExecutiveSummary} />
+
             {/* Announcement Banner */}
             {announcements.length > 0 && (
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 p-5 text-white shadow-lg">

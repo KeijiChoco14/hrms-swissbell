@@ -13,6 +13,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskActivity;
 use App\Models\WorkSchedule;
+use App\Services\AiAssistantService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -38,6 +39,9 @@ class DashboardController extends Controller
             'role' => $role,
             'announcements' => $latestAnnouncements,
         ];
+
+        $aiService = app(AiAssistantService::class);
+        $aiSummary = $aiService->generateExecutiveSummary();
 
         if ($role === 'Staff / Employee') {
             $employeeId = $user->employee?->id;
@@ -117,6 +121,7 @@ class DashboardController extends Controller
                 'teamAttendanceSummary' => $teamAttendanceSummary,
                 'pendingLeaves' => $pendingLeaves,
                 'projectProgress' => $projectProgress,
+                'aiExecutiveSummary' => $aiSummary,
             ];
         } elseif ($role === 'HRD / Admin') {
             // Attendance today
@@ -151,6 +156,7 @@ class DashboardController extends Controller
                 'pendingLeaves' => $pendingLeaves,
                 'pendingOvertime' => $pendingOvertime,
                 'recentHires' => $recentHires,
+                'aiExecutiveSummary' => $aiSummary,
             ];
         } elseif ($role === 'General Manager' || $role === 'Super Admin') {
             // Attendance rate this month
@@ -206,6 +212,7 @@ class DashboardController extends Controller
                 'pendingLeaves' => $pendingLeaves,
                 'pendingOvertime' => $pendingOvertime,
                 'departmentPerformance' => $departmentPerformance,
+                'aiExecutiveSummary' => $aiSummary,
             ];
         }
 

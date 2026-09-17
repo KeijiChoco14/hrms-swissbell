@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AiExecutiveAssistantController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
@@ -57,6 +58,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/checklists/{checklist}', [TaskChecklistController::class, 'destroy'])->name('tasks.checklists.destroy');
 
     Route::post('/tasks/{task}/acknowledge', [TaskController::class, 'acknowledge'])->name('tasks.acknowledge');
+
+    // AI Executive Assistant Routes
+    Route::get('/ai-executive-assistant/summary', [AiExecutiveAssistantController::class, 'getSummary'])->name('ai-executive.summary');
+    Route::post('/ai-executive-assistant/ask', [AiExecutiveAssistantController::class, 'ask'])->name('ai-executive.ask');
 
     // Notifications Route
     Route::delete('/notifications/{id}', function ($id) {
