@@ -66,10 +66,18 @@ interface Props {
         position?: {
             name: string;
         };
-    };
+    } | null;
+    spvHK?: {
+        user?: {
+            name: string;
+        };
+        position?: {
+            name: string;
+        };
+    } | null;
 }
 
-export default function MasterKeyPrint({ requestData, hodHK }: Props) {
+export default function MasterKeyPrint({ requestData, hodHK, spvHK }: Props) {
     const handlePrint = () => {
         window.print();
     };
@@ -147,7 +155,7 @@ export default function MasterKeyPrint({ requestData, hodHK }: Props) {
                                         Komplek Mall SKA, Jl. Soekarno-Hatta, Pekanbaru 28294, Riau - Indonesia
                                     </p>
                                     <p className="text-[10px] text-gray-500">
-                                        Telp: (0761) 61888 • Email: pekanbaru-sbi@swiss-belhotel.com • www.swiss-belhotel.com
+                                        Telp: +6276161888 • Email: pekanbaru-sbi@swiss-belhotel.com • www.swiss-belhotel.com
                                     </p>
                                 </div>
                             </div>
@@ -206,7 +214,7 @@ export default function MasterKeyPrint({ requestData, hodHK }: Props) {
                     </h3>
                     <div className="grid grid-cols-2 gap-y-2 gap-x-6 text-xs px-2">
                         <div className="flex">
-                            <span className="w-44 text-gray-500">Requested by:</span>
+                            <span className="w-36 text-gray-500">Requested by:</span>
                             <span className="font-bold text-gray-900">{requestData.request_by || requestData.employee?.user?.name || '-'}</span>
                         </div>
                         <div className="flex">
@@ -227,7 +235,7 @@ export default function MasterKeyPrint({ requestData, hodHK }: Props) {
                         </div>
                         <div className="flex">
                             <span className="w-36 text-gray-500">Direct Supervisor (SPV):</span>
-                            <span className="text-gray-800">{requestData.employee?.supervisor?.user?.name || 'Lestari Putri'}</span>
+                            <span className="text-gray-800">{requestData.employee?.supervisor?.user?.name || '-'}</span>
                         </div>
                     </div>
                 </div>
@@ -379,9 +387,11 @@ export default function MasterKeyPrint({ requestData, hodHK }: Props) {
                             </div>
                             <div className="border-t border-gray-300 pt-1">
                                 <p className="font-bold text-gray-900 leading-tight truncate">
-                                    {requestData.employee?.supervisor?.user?.name || 'Lestari Putri'}
+                                    {spvHK?.user?.name || '(...................................)'}
                                 </p>
-                                <span className="text-[10px] text-gray-500">Housekeeping Supervisor</span>
+                                <span className="text-[10px] text-gray-500">
+                                    {spvHK?.position?.name || 'Housekeeping Supervisor'}
+                                </span>
                             </div>
                         </div>
 
@@ -411,9 +421,11 @@ export default function MasterKeyPrint({ requestData, hodHK }: Props) {
                             </div>
                             <div className="border-t border-gray-300 pt-1">
                                 <p className="font-bold text-gray-900 leading-tight truncate">
-                                    {requestData.done_by_username || hodHK?.user?.name || 'Dewi Kartika'}
+                                    {hodHK?.user?.name || (requestData.status === 'Done' && requestData.done_by_username && !requestData.done_by_username.toLowerCase().includes('admin') && requestData.done_by_username !== 'Dewi Kartika' ? requestData.done_by_username : '(...................................)')}
                                 </p>
-                                <span className="text-[10px] text-gray-500">Executive Housekeeper</span>
+                                <span className="text-[10px] text-gray-500">
+                                    {hodHK?.position?.name || 'Executive Housekeeper'}
+                                </span>
                             </div>
                         </div>
 

@@ -646,18 +646,67 @@ class MasterKeyRequestController extends Controller
             'auditLogs.user',
         ]);
 
-        // Find Executive Housekeeper for signature section
-        $hkDept = Department::where('name', 'Housekeeping')->first();
-        $hodHK = Employee::with(['user', 'position'])
-            ->where('department_id', $hkDept?->id)
-            ->whereHas('user.roles', function ($q) {
-                $q->where('name', 'Head of Department');
-            })
+        // Find Executive Housekeeper / HK HOD for signature section
+        $hkDept = Department::where('name', 'Housekeeping')
+            ->orWhere('name', 'like', '%Housekeeping%')
             ->first();
+
+        $hodHK = null;
+        if ($hkDept) {
+            $hodHK = Employee::with(['user', 'position'])
+                ->where('department_id', $hkDept->id)
+                ->where(function ($q) {
+                    $q->whereHas('user.roles', function ($r) {
+                        $r->where('name', 'Head of Department');
+                    })->orWhereHas('position', function ($p) {
+                        $p->where('name', 'like', '%Executive Housekeeper%')
+                          ->orWhere('name', 'like', '%Head of Department%')
+                          ->orWhere('name', 'like', '%HOD%')
+                          ->orWhere('name', 'like', '%EHK%');
+                    });
+                })
+                ->whereDoesntHave('user.roles', function ($r) {
+                    $r->where('name', 'Super Admin');
+                })
+                ->first();
+        }
+
+        // Find Housekeeping Supervisor (HK SPV) for signature section
+        $spvHK = null;
+        if ($hkDept) {
+            $spvHK = Employee::with(['user', 'position'])
+                ->where('department_id', $hkDept->id)
+                ->where(function ($q) {
+                    $q->whereHas('user.roles', function ($r) {
+                        $r->where('name', 'Supervisor');
+                    })->orWhereHas('position', function ($p) {
+                        $p->where('name', 'like', '%Supervisor%')
+                          ->orWhere('name', 'like', '%SPV%');
+                    });
+                })
+                ->whereDoesntHave('user.roles', function ($r) {
+                    $r->where('name', 'Super Admin');
+                })
+                ->first();
+        }
+
+        // If requester has a direct supervisor who is an actual Supervisor (and not Super Admin)
+        if (!$spvHK && $masterKeyRequest->employee?->supervisor) {
+            $directSupervisor = $masterKeyRequest->employee->supervisor;
+            $isNotSuperAdmin = !$directSupervisor->user?->hasRole('Super Admin');
+            $hasSpvRole = $directSupervisor->user?->hasRole('Supervisor');
+            $hasSpvPos = str_contains(strtolower($directSupervisor->position?->name ?? ''), 'supervisor')
+                      || str_contains(strtolower($directSupervisor->position?->name ?? ''), 'spv');
+
+            if ($isNotSuperAdmin && ($hasSpvRole || $hasSpvPos)) {
+                $spvHK = $directSupervisor->load(['user', 'position']);
+            }
+        }
 
         return Inertia::render('MasterKey/Print', [
             'requestData' => $masterKeyRequest,
             'hodHK' => $hodHK,
+            'spvHK' => $spvHK,
         ]);
     }
 
