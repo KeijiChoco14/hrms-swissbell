@@ -548,19 +548,19 @@ export default function Authenticated({
 
                                 {/* When sidebar is collapsed: show mini brand and active module indicator */}
                                 {!isSidebarOpen && (
-                                    <div className="flex items-center gap-2.5">
+                                    <div className="flex items-center gap-2">
                                         <Link
                                             href={route('dashboard')}
-                                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-gray-100 transition-colors group"
+                                            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition-colors group shrink-0"
                                             title="Back to Main Menu (Desk Launcher)"
                                         >
-                                            <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 flex items-center justify-center p-1 shadow-sm">
+                                            <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 flex items-center justify-center p-1 shadow-sm shrink-0">
                                                 <ApplicationLogo className="h-full w-full object-contain filter brightness-0 invert" />
                                             </div>
-                                            <span className="font-bold text-gray-800 text-xs tracking-tight hidden lg:inline">SIPU</span>
+                                            <span className="font-bold text-gray-800 text-xs tracking-tight hidden sm:inline">SIPU</span>
                                         </Link>
-                                        <span className="text-gray-300">|</span>
-                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100/80 text-xs font-semibold text-gray-700 border border-gray-200/60">
+                                        <span className="text-gray-300 hidden sm:inline">|</span>
+                                        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100/80 text-xs font-semibold text-gray-700 border border-gray-200/60 shrink-0">
                                             <span className={`w-2 h-2 rounded-full ${activeModuleInfo.dotColor}`}></span>
                                             <span>{activeModuleInfo.title}</span>
                                         </div>
@@ -584,10 +584,12 @@ export default function Authenticated({
                             </div>
                         )}
 
-                        {/* Page heading inline / Search slot */}
-                        <div className="hidden md:block flex-1 min-w-0 w-full mr-6 [&>div]:w-full [&>h2]:w-full">
-                            {header}
-                        </div>
+                        {/* Search slot (Only when hideSidebar is true, e.g. Desk Launcher) */}
+                        {header && hideSidebar && (
+                            <div className="hidden md:block flex-1 min-w-0 max-w-lg mx-auto px-4">
+                                {header}
+                            </div>
+                        )}
 
                         {/* Topbar right */}
                         <div className="ml-auto flex items-center gap-3">
@@ -696,10 +698,12 @@ export default function Authenticated({
                         </div>
                     </div>
 
-                    {/* Mobile header (below topbar) */}
-                    <div className="md:hidden border-t border-gray-100 px-4 py-2">
-                        {header}
-                    </div>
+                    {/* Mobile Search slot (Desk Launcher on mobile) */}
+                    {header && hideSidebar && (
+                        <div className="md:hidden border-t border-gray-100/80 bg-white/95 px-4 py-2.5">
+                            {header}
+                        </div>
+                    )}
 
                     {/* Mobile Navigation Menu */}
                     <div className={`${showingNavigationDropdown ? 'block' : 'hidden'} md:hidden border-t border-gray-200 bg-white`}>
@@ -755,6 +759,15 @@ export default function Authenticated({
                         </div>
                     </div>
                 </header>
+
+                {/* Dedicated Page Header Banner for all normal pages (!hideSidebar) */}
+                {header && !hideSidebar && (
+                    <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/60 py-4 px-4 sm:px-6 lg:px-8 shadow-2xs transition-all">
+                        <div className={isSidebarOpen ? 'max-w-7xl mx-auto w-full' : 'w-full max-w-[1650px] mx-auto'}>
+                            {header}
+                        </div>
+                    </div>
+                )}
 
                 {/* Page Content */}
                 <main className={`flex-1 overflow-y-auto transition-all duration-300 ${hideSidebar ? 'p-4 sm:p-6 lg:p-10' : 'p-4 sm:p-6 lg:p-8'}`}>
