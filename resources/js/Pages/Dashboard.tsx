@@ -735,26 +735,39 @@ export default function Dashboard({
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={handleSearchKeyDown}
                             placeholder="Search modules or apps..."
-                            className="w-full pl-10 pr-16 py-2 text-sm bg-gray-100/90 hover:bg-gray-100 focus:bg-white border border-gray-200 focus:border-indigo-500 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-gray-800 placeholder-gray-400"
+                            className="w-full pl-10 pr-10 sm:pr-16 py-2 text-xs sm:text-sm bg-gray-100/90 hover:bg-gray-100 focus:bg-white border border-gray-200 focus:border-indigo-500 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-gray-800 placeholder-gray-400"
                         />
-                        <div className="absolute right-3 flex items-center gap-1 pointer-events-none">
-                            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-semibold text-gray-500 bg-white border border-gray-200 rounded shadow-2xs">Ctrl</kbd>
-                            <kbd className="hidden sm:inline-block px-1 py-0.5 text-[10px] font-semibold text-gray-500 bg-white border border-gray-200 rounded shadow-2xs">K</kbd>
-                        </div>
+                        {searchQuery ? (
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 p-1 text-gray-400 hover:text-gray-600 rounded-full cursor-pointer"
+                                title="Clear search"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        ) : (
+                            <div className="absolute right-3 hidden sm:flex items-center gap-1 pointer-events-none">
+                                <kbd className="px-1.5 py-0.5 text-[10px] font-semibold text-gray-500 bg-white border border-gray-200 rounded shadow-2xs">Ctrl</kbd>
+                                <kbd className="px-1 py-0.5 text-[10px] font-semibold text-gray-500 bg-white border border-gray-200 rounded shadow-2xs">K</kbd>
+                            </div>
+                        )}
                     </div>
                 </div>
             }
         >
             <Head title="Main Menu - SIPU Swiss-Belinn" />
 
-            <div className="py-6 sm:py-10 space-y-10">
+            <div className="py-4 sm:py-10 space-y-6 sm:space-y-10">
                 {/* Greeting & Header Bar */}
-                <div className="text-center max-w-2xl mx-auto space-y-2">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        {getTodayDate()} • Swiss-Belinn SKA Pekanbaru
+                <div className="text-center max-w-2xl mx-auto space-y-2 px-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 max-w-full">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                        <span className="truncate">{getTodayDate()} • Swiss-Belinn SKA Pekanbaru</span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                    <h1 className="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
                         {getGreeting()}, {user.name} 👋
                     </h1>
                     <p className="text-xs sm:text-sm text-gray-500">
@@ -764,7 +777,7 @@ export default function Dashboard({
 
                 {/* Announcement Ticker (if any) */}
                 {announcements.length > 0 && !searchQuery && (
-                    <div className="max-w-4xl mx-auto">
+                    <div className="max-w-4xl mx-auto px-2 sm:px-0">
                         <Link
                             href={route('announcements.index')}
                             className="block p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-100/80 hover:border-indigo-200 shadow-xs hover:shadow-sm transition-all group"
@@ -780,7 +793,7 @@ export default function Dashboard({
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-100/60 px-2 py-0.5 rounded-md">
                                             Latest Announcement
                                         </span>
-                                        <span className="text-xs text-gray-500">
+                                        <span className="text-xs text-gray-500 truncate">
                                             {announcements[0]?.title}
                                         </span>
                                     </div>
@@ -797,30 +810,30 @@ export default function Dashboard({
                 )}
 
                 {/* APP LAUNCHER GRID (Frappe Desk style) */}
-                <div className="max-w-5xl mx-auto">
+                <div className="max-w-5xl mx-auto px-2 sm:px-0">
                     {filteredApps.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-x-6 sm:gap-x-10 gap-y-8 sm:gap-y-12 place-items-center">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-x-4 sm:gap-x-10 gap-y-6 sm:gap-y-12 place-items-center">
                             {filteredApps.map((app) => {
                                 const CardContent = (
                                     <div className="flex flex-col items-center group cursor-pointer focus:outline-none">
                                         {/* Squircle App Icon */}
                                         <div className="relative">
                                             <div
-                                                className={`w-18 h-18 sm:w-20 sm:h-20 rounded-[22px] bg-gradient-to-br ${app.gradient} flex items-center justify-center shadow-md shadow-gray-200/80 group-hover:shadow-xl group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-300 ease-out`}
+                                                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-[22px] bg-gradient-to-br ${app.gradient} flex items-center justify-center shadow-md shadow-gray-200/80 group-hover:shadow-xl group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-300 ease-out`}
                                             >
                                                 {app.icon}
                                             </div>
 
                                             {/* Badge Notification */}
                                             {app.badge && (
-                                                <span className={`absolute -top-1.5 -right-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold text-white shadow-md border-2 border-white animate-pulse ${app.badgeColor || 'bg-red-500'}`}>
+                                                <span className={`absolute -top-1.5 -right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold text-white shadow-md border-2 border-white whitespace-nowrap z-10 animate-pulse ${app.badgeColor || 'bg-red-500'}`}>
                                                     {app.badge}
                                                 </span>
                                             )}
                                         </div>
 
                                         {/* App Title */}
-                                        <span className="mt-3 text-xs sm:text-[13px] font-semibold text-gray-700 group-hover:text-indigo-600 text-center tracking-tight transition-colors line-clamp-2 max-w-[110px] leading-snug">
+                                        <span className="mt-2.5 sm:mt-3 text-xs sm:text-[13px] font-semibold text-gray-700 group-hover:text-indigo-600 text-center tracking-tight transition-colors line-clamp-2 max-w-[130px] sm:max-w-[120px] leading-snug">
                                             {app.name}
                                         </span>
                                     </div>
