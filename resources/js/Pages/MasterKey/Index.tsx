@@ -1157,20 +1157,30 @@ export default function MasterKeyIndex({
                             <TextInput
                                 id="form_room_range"
                                 type="text"
+                                list="common_room_ranges_list"
                                 value={formData.room_range_access}
                                 onChange={(e) => setFormData('room_range_access', e.target.value)}
-                                placeholder="E.g., Floor 2 (Rooms 201 - 240)"
+                                placeholder="E.g., Lantai 2 (Kamar 201 - 210)"
                                 className="mt-1 block w-full text-xs"
                                 required
                             />
+                            <datalist id="common_room_ranges_list">
+                                {commonRoomRanges.map(cr => (
+                                    <option key={cr} value={cr} />
+                                ))}
+                            </datalist>
                             {/* Quick options */}
                             <div className="mt-1.5 flex flex-wrap gap-1">
-                                {commonRoomRanges.slice(0, 4).map(cr => (
+                                {commonRoomRanges.map(cr => (
                                     <button
                                         type="button"
                                         key={cr}
                                         onClick={() => setFormData('room_range_access', cr)}
-                                        className="text-[10px] px-2 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer"
+                                        className={`text-[10px] px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                                            formData.room_range_access === cr
+                                                ? 'bg-indigo-600 text-white font-medium shadow-xs'
+                                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                                        }`}
                                     >
                                         + {cr}
                                     </button>
